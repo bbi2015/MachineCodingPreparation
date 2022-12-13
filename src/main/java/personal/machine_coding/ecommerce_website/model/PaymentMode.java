@@ -1,4 +1,4 @@
-package personal.machine_coding.model;
+package personal.machine_coding.ecommerce_website.model;
 
 public enum PaymentMode {
     COD,

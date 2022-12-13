@@ -1,7 +1,8 @@
-package personal.machine_coding.model;
+package personal.machine_coding.ecommerce_website.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import personal.machine_coding.ecommerce_website.model.Address;
 
 @Builder
 @Getter

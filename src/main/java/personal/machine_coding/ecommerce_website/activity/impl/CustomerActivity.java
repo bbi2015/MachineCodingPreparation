@@ -1,12 +1,12 @@
-package personal.machine_coding.activity.impl;
+package personal.machine_coding.ecommerce_website.activity.impl;
 
 import org.apache.commons.lang3.StringUtils;
-import personal.machine_coding.activity.ECommerceActivity;
-import personal.machine_coding.dao.ECommerceDao;
-import personal.machine_coding.dao.impl.ECommerceInMemoryDaoImpl;
-import personal.machine_coding.exception.BadRequestException;
-import personal.machine_coding.model.Address;
-import personal.machine_coding.model.Customer;
+import personal.machine_coding.ecommerce_website.activity.ECommerceActivity;
+import personal.machine_coding.ecommerce_website.dao.ECommerceDao;
+import personal.machine_coding.ecommerce_website.dao.impl.ECommerceInMemoryDaoImpl;
+import personal.machine_coding.ecommerce_website.exception.BadRequestException;
+import personal.machine_coding.ecommerce_website.model.Address;
+import personal.machine_coding.ecommerce_website.model.Customer;
 
 import java.io.IOException;
 

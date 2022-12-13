@@ -1,6 +1,6 @@
-package personal.machine_coding.activity;
+package personal.machine_coding.ecommerce_website.activity;
 
-import personal.machine_coding.model.PaymentMode;
+import personal.machine_coding.ecommerce_website.model.PaymentMode;
 
 import java.io.IOException;
 

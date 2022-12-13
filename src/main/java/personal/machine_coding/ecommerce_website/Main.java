@@ -1,11 +1,11 @@
-package personal.machine_coding;
+package personal.machine_coding.ecommerce_website;
 
-import personal.machine_coding.activity.ECommerceActivity;
-import personal.machine_coding.activity.impl.CustomerActivity;
-import personal.machine_coding.activity.impl.OrderActivity;
-import personal.machine_coding.activity.impl.ProductActivity;
-import personal.machine_coding.activity.impl.ServiceAbilityActivity;
-import personal.machine_coding.model.PaymentMode;
+import personal.machine_coding.ecommerce_website.activity.ECommerceActivity;
+import personal.machine_coding.ecommerce_website.activity.impl.CustomerActivity;
+import personal.machine_coding.ecommerce_website.activity.impl.OrderActivity;
+import personal.machine_coding.ecommerce_website.activity.impl.ProductActivity;
+import personal.machine_coding.ecommerce_website.activity.impl.ServiceAbilityActivity;
+import personal.machine_coding.ecommerce_website.model.PaymentMode;
 
 import java.io.IOException;
 

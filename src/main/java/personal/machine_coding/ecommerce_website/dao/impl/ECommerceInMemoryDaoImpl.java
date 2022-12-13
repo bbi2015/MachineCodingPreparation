@@ -1,13 +1,13 @@
-package personal.machine_coding.dao.impl;
+package personal.machine_coding.ecommerce_website.dao.impl;
 
-import personal.machine_coding.dao.ECommerceDao;
-import personal.machine_coding.exception.BadRequestException;
-import personal.machine_coding.model.CreateOrderRequest;
-import personal.machine_coding.model.Customer;
-import personal.machine_coding.model.Order;
-import personal.machine_coding.model.PaymentMode;
-import personal.machine_coding.model.Product;
-import personal.machine_coding.model.ServiceAbilityKey;
+import personal.machine_coding.ecommerce_website.dao.ECommerceDao;
+import personal.machine_coding.ecommerce_website.exception.BadRequestException;
+import personal.machine_coding.ecommerce_website.model.CreateOrderRequest;
+import personal.machine_coding.ecommerce_website.model.Customer;
+import personal.machine_coding.ecommerce_website.model.Order;
+import personal.machine_coding.ecommerce_website.model.PaymentMode;
+import personal.machine_coding.ecommerce_website.model.Product;
+import personal.machine_coding.ecommerce_website.model.ServiceAbilityKey;
 
 import java.io.IOException;
 import java.time.Instant;

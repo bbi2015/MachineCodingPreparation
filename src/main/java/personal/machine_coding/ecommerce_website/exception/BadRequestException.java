@@ -1,4 +1,4 @@
-package personal.machine_coding.exception;
+package personal.machine_coding.ecommerce_website.exception;
 
 import java.io.IOException;
 

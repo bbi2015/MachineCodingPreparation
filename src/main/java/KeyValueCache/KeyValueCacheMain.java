@@ -1,12 +1,14 @@
 package KeyValueCache;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class KeyValueCacheActivity<K, V> extends AbstractKeyValueCache<K, V> {
 
@@ -26,6 +28,16 @@ class KeyValueCacheActivity<K, V> extends AbstractKeyValueCache<K, V> {
     public V get(@NonNull K key) {
         return cacheDao.get(key);
     }
+
+    @Override
+    public <T> void createSecondaryIndex(String fieldName, T classType) {
+        cacheDao.createSecondaryIndex(fieldName, classType);
+    }
+
+    @Override
+    public <T> V getFromSI(T key) {
+        return cacheDao.getFromSI("email", key);
+    }
 }
 
 abstract class AbstractKeyValueCache<K, V> {
@@ -34,12 +46,79 @@ abstract class AbstractKeyValueCache<K, V> {
     public V get(@NonNull final K key) {
         return null;
     }
+    public <T> void createSecondaryIndex(final String fieldName, T classType) {};
+    public <T> V getFromSI(final T key) {
+        return null;
+    };
 }
 
 interface CacheDao<K, V> {
     void initializeCache(int capacity);
     void put(K key, V value);
     V get(K key);
+    <T> void createSecondaryIndex(String fieldName, T classType);
+    <T> V getFromSI(String indexName, T key);
+}
+
+interface SecondaryIndex<T, K, V> {
+    void createSecondaryIndex(String fieldName, List<KeyValuePair<K, V>> value);
+    void put(T key, K pointer);
+    K get(T key);
+    void delete(T key);
+}
+
+class SecondaryIndexInMemoryImpl<T, K, V> implements SecondaryIndex<T, K, V> {
+
+    private static final SecondaryIndex SECONDARY_INDEX = new SecondaryIndexInMemoryImpl();
+
+    private final List<SecondaryIndexModel<T, K>> secondaryIndexModels = new ArrayList<>();
+
+    public static<T, K, V> SecondaryIndex<T, K, V> getInstance() {
+        return SECONDARY_INDEX;
+    }
+
+    @Override
+    public void createSecondaryIndex(String fieldName, List<KeyValuePair<K, V>> value) {
+        value.forEach(kvKeyValuePair -> {
+            try {
+                final Field field = kvKeyValuePair.getValue().getClass().getDeclaredField(fieldName);
+                field.setAccessible(true);
+                secondaryIndexModels.add(SecondaryIndexModel.<T, K>builder()
+                                .key((T) field.get(kvKeyValuePair.getValue()))
+                                .pointer(kvKeyValuePair.getKey())
+                        .build());
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void put(T key, K pointer) {
+        secondaryIndexModels.add(SecondaryIndexModel.<T, K>builder()
+                        .key(key)
+                        .pointer(pointer)
+                .build());
+    }
+
+    @Override
+    public K get(T key) {
+        return secondaryIndexModels.stream()
+                .filter(tkSecondaryIndexModel -> tkSecondaryIndexModel.getKey().equals(key))
+                .findFirst()
+                .map(SecondaryIndexModel::getPointer)
+                .orElse(null);
+    }
+
+    @Override
+    public void delete(T key) {
+        final SecondaryIndexModel<T, K> secondaryIndexModel = secondaryIndexModels
+                .stream()
+                .filter(tkSecondaryIndexModel -> tkSecondaryIndexModel.getKey().equals(key))
+                .findFirst()
+                .get();
+        secondaryIndexModels.remove(secondaryIndexModel);
+    }
 }
 
 class KeyValueCacheDaoInMemoryImpl<K, V> implements CacheDao<K, V> {
@@ -48,6 +127,7 @@ class KeyValueCacheDaoInMemoryImpl<K, V> implements CacheDao<K, V> {
 
     private int capacity = 0;
     private final List<KeyValuePair<K, V>> cacheData = new ArrayList<>();
+    private final Map<String, SecondaryIndex> secondaryIndexMap = new HashMap<>();
 
     public static<K, V> CacheDao<K, V> getInstance() {
         return CACHE_DAO;
@@ -81,6 +161,18 @@ class KeyValueCacheDaoInMemoryImpl<K, V> implements CacheDao<K, V> {
         return value.getValue();
     }
 
+    @Override
+    public <T> void createSecondaryIndex(String fieldName, T classType) {
+        final SecondaryIndex<T, K, V> secondaryIndex = SecondaryIndexInMemoryImpl.getInstance();
+        this.secondaryIndexMap.put(fieldName, secondaryIndex);
+        secondaryIndex.createSecondaryIndex(fieldName, cacheData);
+    }
+
+    @Override
+    public <T> V getFromSI(String indexName, T key) {
+        return get((K) secondaryIndexMap.get(indexName).get(key));
+    }
+
     private KeyValuePair<K, V> getCurrentValue(final K key) {
         return cacheData.stream()
                 .filter(kvKeyValuePair -> kvKeyValuePair.getKey().equals(key))
@@ -98,6 +190,13 @@ class KeyValueCacheDaoInMemoryImpl<K, V> implements CacheDao<K, V> {
 
 @Builder
 @Getter
+class SecondaryIndexModel<T, K> {
+    private final T key;
+    private final K pointer;
+}
+
+@Builder
+@Getter
 class KeyValuePair<K, V> {
     private final K key;
     private V value;
@@ -109,31 +208,26 @@ class KeyValuePair<K, V> {
 
 @Builder
 @Getter
-@EqualsAndHashCode
-class Key {
-    private final String source;
-    private final String dest;
-}
-
-@Builder
-@Getter
 class Value {
-    private final String value;
+    private final String userId;
+    private final String firstName;
+    private final String email;
+    private final String lastName;
 }
 
 public class KeyValueCacheMain {
     public static void main(String[] args) {
 
-        final AbstractKeyValueCache<Key, Value> cache = new KeyValueCacheActivity<>();
+        final AbstractKeyValueCache<String, Value> cache = new KeyValueCacheActivity<>();
 
         cache.initialize(5);
 
-        cache.put(Key.builder().source("A").dest("B").build(), Value.builder().value("C").build());
-        cache.put(Key.builder().source("A").dest("C").build(), Value.builder().value("D").build());
-        cache.put(Key.builder().source("A").dest("D").build(), Value.builder().value("E").build());
-        cache.put(Key.builder().source("A").dest("E").build(), Value.builder().value("F").build());
-        cache.put(Key.builder().source("A").dest("F").build(), Value.builder().value("G").build());
+        cache.put("1", Value.builder().userId("1").firstName("Arijit").lastName("Debnath").email("adn").build());
+        cache.put("2", Value.builder().userId("2").firstName("Pulkit").lastName("Agarwal").email("pagg").build());
 
-        System.out.println(cache.get(Key.builder().source("A").dest("C").build()).getValue());
+        System.out.println(cache.get("1").getLastName());
+
+        cache.createSecondaryIndex("email", String.class);
+        System.out.println(cache.getFromSI("adn").getFirstName());
     }
 }
